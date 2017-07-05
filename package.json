@@ -1,0 +1,16 @@
+{
+  "name": "swagger-testcheck",
+  "version": "0.0.1",
+  "description": "Generate testcheck generators from swagger definition",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "DaveWM",
+  "license": "ISC",
+  "dependencies": {
+    "js-beautify": "^1.6.14",
+    "ramda": "^0.24.1",
+    "swagger-parser": "^3.4.1"
+  }
+}

@@ -1,0 +1,527 @@
+swagger: '2.0'
+info:
+  version: 1.2.0
+  title: PLANet 3 UI RESTful API Protocol
+  description: 'UI API Request/Response Protocol conforming to the JSON-API specification.'
+consumes:
+  - application/vnd.api+json
+produces:
+  - application/vnd.api+json
+paths:
+  /faults:
+    get:
+      operationId: getFaults
+      tags:
+        - Faults
+      description: 'Returns a limited number of faults within an optional range of date-times. Date times should be in a format compliant with ISO8601. If no date-time range is provided then a default of the previous 24 hours (referenced by server time) will be used.'
+      parameters:
+        - name: 'filter[startDateTime]'
+          in: query
+          description: 'Optional. Start date/time in a range of faults to return. ISO8601 formatted. If omitted then the current date-time minus 24 hours is used.'
+          required: false
+          type: string
+          format: date-time
+        - name: 'filter[endDateTime]'
+          in: query
+          description: 'Optional. End date/time in a range of faults to return. ISO8601 formatted. If omitted then the current date-time is used.'
+          required: false
+          type: string
+          format: date-time
+        - name: 'filter[startId]'
+          in: query
+          description: 'Optional. First identifier of the results to return. i.e. the start key to jump to in the results.'
+          required: false
+          type: string
+        - name: 'filter[geoSpatial]'
+          in: query
+          description: 'Optional. Array of comma separated values denoting a geospatial point or area. Examples - for a circle "X, Y, R" where X is the longitude, Y is the latitude centre of the circle with a radius R (in metres). For a box there must be 4 values supplied signifying the bottom left corner (long, lat) and the upper right corner (long, lat) of the box. For a polygon the points must be an even number of point pairs with the format of LONG1, LAT1, LONG2, LAT2... etc.'
+          required: false
+          type: string
+        - name: filter[faultType]
+          in: query
+          description: 'Optional. A list of comma separated values suggesting various fault types needed in the response. Fault types are numeric ids of various faults. Response will fetch the faults whose fault type is one of the values passed here.  e.g. 112 is lamp failed whereas 116 is power failure.'
+          required: false
+          type: string
+        - name: 'limit'
+          in: query
+          description: 'Optional. The maximum number of results to return (minimum 1). If omitted then the default is 100.'
+          required: false
+          type: integer
+          format: int32
+          default: 100
+          minimum: 1
+      responses:
+        '200':
+          description: 'Valid response returning data.'
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              jsonapi:
+                description: 'An object describing the server''s implementation of JSON-API standard'
+                type: object
+                properties:
+                  version:
+                    description: 'JSON-API version supported'
+                    type: string
+              links:
+                description: 'Context sensitive links associated with this data.'
+                type: object
+                properties:
+                  next:
+                    description: 'Optional. URL that would return the next page of data based on the value of ''limit'' provided to the call that generated the current data set. For non collection result sets, will be NULL.'
+                    type: string
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/faultResource'
+          examples:
+            application/vnd.api+json:
+              jsonapi:
+                version: '1.0'
+              links:
+                next: 'http://cs-centos6-p3snaps-01.dev.telensa.uk.net/p3t1/rest/ui/faults?filter[startId]=58e27d2a4d1daf588cf13dd6'
+              data:
+                - type: fault
+                  id: '58e27d2a4d1daf588cf13dd6:58e27d2a4d1daf588cf13da9'
+                  links:
+                    self: 'http://cs-centos6-p3snaps-01.dev.telensa.uk.net/p3t1/rest/ui/faults/5922f6b8c87c7a349c45093d:5922f6b8c87c7a349c450938'
+                  attributes:
+                    element:
+                      _id: '58dbb4b64d1daf4e34ba4264'
+                    asset:
+                      _id: '58dbb48e4d1daf4e34b9c5e1'
+                      longitude: -0.05217348025
+                      latitude: 51.53739949
+                      address: 'SHARON GARDENS, S2, Victoria Ward, South side Jtn Clerm'
+                    recurrence:
+                      countForPeriod: 123
+                      countSinceFixed: 33
+                    fault:
+                      eventtype: 42
+                      eventdatetime: '2016-05-20T21:10:02.000Z'
+                      eventindex: 94
+                      clofactor: 200
+                      cloenabled: 0
+                      monitor: 1
+        '500':
+          description: 'Error response indicating internal server error.'
+          schema:
+            $ref: '#/definitions/errorResponse'
+        default:
+          description: 'Error response indicating a problem with the request.'
+          schema:
+            $ref: '#/definitions/errorResponse'
+  '/fault/{id}':
+    parameters:
+      - name: id
+        in: path
+        description: 'The UUID of the fault as previously returned by GET /faults etc.'
+        required: true
+        type: string
+    get:
+      operationId: getFault
+      tags:
+        - Faults
+      description: 'Returns a specific faults record based on the supplied identifier.'
+      responses:
+        '200':
+          description: 'Valid response returning data.'
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              jsonapi:
+                description: 'An object describing the server''s implementation of JSON-API standard'
+                type: object
+                properties:
+                  version:
+                    description: 'JSON-API version supported'
+                    type: string
+              data:
+                type: array
+                items:
+                  $ref: '#/definitions/faultResource'
+
+          examples:
+            application/vnd.api+json:
+              jsonapi:
+                version: '1.0'
+              data:
+                - type: fault
+                  id: '58e27d2a4d1daf588cf13dd6:58e27d2a4d1daf588cf13da9'
+                  links:
+                    self: 'http://cs-centos6-p3snaps-01.dev.telensa.uk.net/p3t1/rest/ui/faults/5922f6b8c87c7a349c45093d:5922f6b8c87c7a349c450938'
+                  attributes:
+                    element:
+                      _id: '58dbb4b64d1daf4e34ba4264'
+                    asset:
+                      _id: '58dbb48e4d1daf4e34b9c5e1'
+                      longitude: -0.05217348025
+                      latitude: 51.53739949
+                      address: 'SHARON GARDENS, S2, Victoria Ward, South side Jtn Clerm'
+                    fault:
+                      eventtype: 42
+                      eventdatetime: '2016-05-20T21:10:02.000Z'
+                      eventindex: 94
+                      clofactor: 200
+                      cloenabled: 0
+                      monitor: 1
+        '500':
+          description: 'Error response indicating internal server error.'
+          schema:
+            $ref: '#/definitions/errorResponse'
+        default:
+          description: 'Error response indicating a problem with the request.'
+          schema:
+            $ref: '#/definitions/errorResponse'
+  '/elements/{id}/diagnosis':
+    parameters:
+      - name: id
+        in: path
+        description: 'The UUID of the element as previously returned by GET /faults etc.'
+        required: true
+        type: string
+      - name: 'date'
+        in: query
+        description: 'Date for which the diagnosis information is requested, ISO8601 formatted.'
+        required: true
+        type: string
+        format: date-time
+    get:
+      operationId: getElementDiagnosis
+      tags:
+        - Faults
+      description: 'Returns fault diagnosis information based on the supplied identifier and date.'
+      responses:
+        '200':
+          description: 'Valid response returning data.'
+          schema:
+            type: object
+            properties:
+              jsonapi:
+                description: 'An object describing the server''s implementation of JSON-API standard'
+                type: object
+                properties:
+                  version:
+                    description: 'JSON-API version supported'
+                    type: string
+              data:
+                type: object
+                properties:
+                  history:
+                    type: array
+                    description: 'Simplified daily data about the element providing the historical context of the diagnosis'
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                          description: 'Date of the history entry'
+                        fault:
+                          type: boolean
+                          description: 'True if the element had any fault on the date of the history entry'
+                        energyExpected:
+                          type: number
+                          description: 'The expected energy usage of the element on the date of the history entry. Depends on the element''s control program'
+                        energyActual:
+                          type: number
+                          description: 'The actual reported energy usage of the element on the date of the history entry'
+                  asset:
+                    $ref: '#/definitions/assetResource'
+                  element:
+                    $ref: '#/definitions/elementResource'
+                  eventsActual:
+                    type: array
+                    items:
+                      $ref: '#/definitions/eventResource'
+                  eventsExpected:
+                    type: array
+                    items:
+                      $ref: '#/definitions/eventResource'
+definitions:
+  errorResponse:
+    title: Error response
+    type: object
+    required:
+      - errors
+    properties:
+      jsonapi:
+        description: 'An object describing the server''s implementation of JSON-API standard'
+        type: object
+        properties:
+          version:
+            description: 'JSON-API version supported'
+            type: string
+      errors:
+        description: 'Array of errors'
+        type: array
+        items:
+          required:
+            - id
+            - code
+          properties:
+            id:
+              type: string
+              description: 'A unique identifier for error instance.'
+            code:
+              type: string
+              description: 'An error code expressed as a string value.'
+            title:
+              type: string
+              description: 'Optional. A short, human-readable summary of the problem.'
+            detail:
+              type: string
+              description: 'Optional. A human-readable explanation specific to this occurrence of the problem.'
+    example:
+      jsonapi:
+        version: '1.0'
+      errors:
+        - id: '58b443bb4d1daf1cb4084209'
+          code: '501'
+          title: 'Unauthorised operation attempted'
+          detail: 'You are not authorised to view fault information.'
+  faultResource:
+    title: Fault resource
+    description: 'JSON document describing the fault resource.'
+    type: object
+    required:
+      - type
+      - id
+      - attributes
+    properties:
+      type:
+        description: 'The type of the object returned (always "fault")'
+        type: string
+      id:
+        description: 'A unique identifier for this particular data record'
+        type: string
+      links:
+        type: object
+        properties:
+          self:
+            description: 'A URL that would return the specific fault record.'
+            type: string
+      attributes:
+        type: object
+        required:
+          - element
+          - asset
+          - fault
+        properties:
+          element:
+            type: object
+            required:
+              - _id
+            properties:
+              _id:
+                type: string
+                description: 'The unique identifier for the associated element.'
+          asset:
+            type: object
+            required:
+              - _id
+            properties:
+              _id:
+                type: string
+                description: 'The unique identifier for the associated element.'
+              longitude:
+                type: number
+                format: double
+                description: 'Optional. The longitude of the asset as defined in the WGS84 projection standard (Google maps uses the same).'
+                minimum: -180
+                maximum: 180
+              latitude:
+                type: number
+                format: double
+                description: 'Optional. The latitude of the asset as defined in the WGS84 projection standard (Google maps uses the same)'
+                minimum: -90
+                maximum: 90
+              address:
+                type: string
+                description: 'Optional. The address of the asset comma concatenated into a single string.'
+          recurrence:
+            type: object
+            required:
+              - countForPeriod
+            properties:
+              countForPeriod:
+                type: integer
+                format: int32
+                description: 'The number of occurances of this particular fault (faultType) for this element (elementid) during the period queried by the client (between start date/time and end date/time).'
+                minimum: 0
+              countSinceFixed:
+                type: integer
+                format: int32
+                description: 'Optional. The number of occurances of this particular fault (faultType) for this element (elementid) since this fault type was last recorded as ''Fixed'' by the Fault Management System.'
+                minimum: 0
+          fault:
+            type: object
+            required:
+              - _id
+            properties:
+              _id:
+                type: string
+                description: The unique identifier for the associated fault.
+              eventtype:
+                type: integer
+                format: int32
+                description: 'The type code classification of the fault.'
+              eventdatetime:
+                type: string
+                format: date-time
+                description: 'Date/Time of when the fault occurred. ISO8601 formatted.'
+              eventindex:
+                type: integer
+                description: 'Event index.'
+              clofactor:
+                type: integer
+                description: 'CLO factor.'
+              cloenabled:
+                type: integer
+                enum:
+                  - 0
+                  - 1
+                description: 'Boolean indicating if CLO is enabled. 0 = false, 1 = true'
+              monitor:
+                type: integer
+                description: 'Monitor program identifier.'
+  assetResource:
+    title: Asset resource
+    description: 'JSON document describing the asset resource.'
+    type: object
+    required:
+      - type
+      - id
+      - attributes
+    properties:
+      type:
+        description: 'The type of the object returned (always "asset")'
+        type: string
+      id:
+        description: 'A unique identifier for this particular data record'
+        type: string
+      links:
+        type: object
+        properties:
+          self:
+            description: 'A URL that would return the specific asset record.'
+            type: string
+      attributes:
+        type: object
+        properties:
+          longitude:
+            type: number
+            format: double
+            description: 'Optional. The longitude of the asset as defined in the WGS84 projection standard (Google maps uses the same).'
+            minimum: -180
+            maximum: 180
+          latitude:
+            type: number
+            format: double
+            description: 'Optional. The latitude of the asset as defined in the WGS84 projection standard (Google maps uses the same)'
+            minimum: -90
+            maximum: 90
+          address:
+            type: string
+            description: 'Optional. The address of the asset comma concatenated into a single string.'
+  elementResource:
+    title: Element resource
+    description: 'JSON document describing the element resource.'
+    type: object
+    required:
+      - type
+      - id
+      - attributes
+    properties:
+      type:
+        description: 'The type of the object returned (always "element")'
+        type: string
+      id:
+        description: 'A unique identifier for this particular data record'
+        type: string
+      links:
+        type: object
+        properties:
+          self:
+            description: 'A URL that would return the specific element record.'
+            type: string
+      attributes:
+        type: object
+        properties:
+          lampType:
+            $ref: '#/definitions/lampTypeResource'
+          lampChangeDate:
+            type: string
+            description: 'ISO8601 formatted date of when the lamp was last changed'
+  lampTypeResource:
+    title: Lamp type resource
+    description: 'JSON document describing the lamp type resource.'
+    type: object
+    required:
+      - type
+      - id
+      - attributes
+    properties:
+      type:
+        description: 'The type of the object returned (always "lampType")'
+        type: string
+      id:
+        description: 'A unique identifier for this particular data record'
+        type: string
+      links:
+        type: object
+        properties:
+          self:
+            description: 'A URL that would return the specific asset record.'
+            type: string
+      attributes:
+        type: object
+        properties:
+          name:
+            type: string
+            description: 'Name of the lamp type'
+          nominalWatts:
+            type: number
+            description: 'Nominal number of watts'
+  eventResource:
+    title: Event resource
+    description: 'JSON document describing the event resource.'
+    type: object
+    required:
+      - type
+      - id
+      - attributes
+    properties:
+      type:
+        description: 'The type of the object returned (always "event")'
+        type: string
+      id:
+        description: 'A unique identifier for this particular data record'
+        type: string
+      links:
+        type: object
+        properties:
+          self:
+            description: 'A URL that would return the specific event record.'
+            type: string
+      attributes:
+        type: object
+        properties:
+          type:
+            type: integer
+            format: int32
+            description: 'The type code classification of the event'
+          datetime:
+            type: string
+            format: date-time
+            description: 'Date/Time of when the event occurred. ISO8601 formatted'
+          index:
+            type: integer
+            description: 'Event index (ordinal number of the event)'
+          energy:
+            type: integer
+            description: 'Energy reading at the time of the event'
