@@ -73,7 +73,9 @@ function propToTypescript(prop) {
                 R.assoc('isRequired', true),
                 propToTypescript,
                 ts => `gen.array(${ts})`
-            )]
+            )],
+
+	    [R.propEq('type', 'boolean'), R.always('gen.boolean')]
         ]),
         R.when(
             R.always(!prop.isRequired),
